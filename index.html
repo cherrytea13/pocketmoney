@@ -24,7 +24,10 @@
 
         <!-- 홈 화면 -->
         <div id="home-page" class="page hidden">
-            <h1>용돈기입장</h1>
+            <div class="header-container">
+                <h1>용돈기입장</h1>
+                <button id="reset-button" class="reset-button">초기화</button>
+            </div>
             <div class="balance-display">
                 <h2>현재 잔액</h2>
                 <p id="current-balance" class="balance-amount">0원</p>
@@ -424,6 +427,17 @@
             <button id="transaction-tab" class="tab-button">💰 거래</button>
             <button id="savings-tab" class="tab-button">💶 저축</button>
         </nav>
+    </div>
+
+    <!-- 초기화 확인 대화상자 -->
+    <div id="reset-confirm-dialog" class="dialog hidden">
+        <div class="dialog-content">
+            <p>모든 저장내용이 삭제됩니다. 정말 초기화 하시겠습니까?</p>
+            <div class="dialog-buttons">
+                <button id="reset-confirm-button" class="primary-button">확인</button>
+                <button id="reset-cancel-button" class="secondary-button">취소</button>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>

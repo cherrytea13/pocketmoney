@@ -48,6 +48,15 @@ function setupEventListeners() {
     // 초기 설정 버튼 클릭
     document.getElementById('start-button').addEventListener('click', handleInitialSetup);
     
+    // 초기화 버튼 클릭
+    document.getElementById('reset-button').addEventListener('click', showResetConfirmDialog);
+    
+    // 초기화 확인 버튼 클릭
+    document.getElementById('reset-confirm-button').addEventListener('click', handleReset);
+    
+    // 초기화 취소 버튼 클릭
+    document.getElementById('reset-cancel-button').addEventListener('click', hideResetConfirmDialog);
+    
     // 탭 전환
     document.getElementById('home-tab').addEventListener('click', showHomePage);
     document.getElementById('budget-tab').addEventListener('click', showBudgetPage);
@@ -1494,6 +1503,35 @@ function saveData() {
     
     // 홈 페이지 데이터 업데이트
     updateHomePageData();
+}
+
+// 초기화 확인 대화상자 표시
+function showResetConfirmDialog() {
+    document.getElementById('reset-confirm-dialog').classList.remove('hidden');
+}
+
+// 초기화 확인 대화상자 숨기기
+function hideResetConfirmDialog() {
+    document.getElementById('reset-confirm-dialog').classList.add('hidden');
+}
+
+// 초기화 처리
+function handleReset() {
+    // 모든 데이터 초기화
+    budgetRecords = [];
+    transactionRecords = [];
+    savingsRecords = [];
+    initialSetupComplete = false;
+    currentBalance = 0;
+    
+    // localStorage 초기화
+    localStorage.clear();
+    
+    // 초기화 대화상자 숨기기
+    hideResetConfirmDialog();
+    
+    // 초기 설정 화면으로 이동
+    showInitialSetupPage();
 }
 
 // 데이터 불러오기 함수
