@@ -73,6 +73,7 @@ function setupEventListeners() {
     
     // 저축 페이지 버튼
     document.getElementById('add-savings-button').addEventListener('click', showSavingsForm);
+    document.getElementById('withdraw-savings-button').addEventListener('click', showWithdrawSavingsForm);
     
     // 예산 폼 제출
     document.getElementById('budget-expense-form').addEventListener('submit', handleBudgetExpenseFormSubmit);
@@ -84,6 +85,7 @@ function setupEventListeners() {
     
     // 저축 폼 제출
     document.getElementById('savings-form-element').addEventListener('submit', handleSavingsFormSubmit);
+    document.getElementById('withdraw-savings-form-element').addEventListener('submit', handleWithdrawSavingsFormSubmit);
     
     // 취소 버튼
     document.getElementById('budget-expense-cancel-button').addEventListener('click', showBudgetPage);
@@ -91,6 +93,7 @@ function setupEventListeners() {
     document.getElementById('transaction-expense-cancel-button').addEventListener('click', showTransactionPage);
     document.getElementById('transaction-income-cancel-button').addEventListener('click', showTransactionPage);
     document.getElementById('savings-cancel-button').addEventListener('click', showSavingsPage);
+    document.getElementById('withdraw-savings-cancel-button').addEventListener('click', showSavingsPage);
     
     // 필터 변경
     document.getElementById('budget-month-filter').addEventListener('change', updateBudgetTable);
@@ -326,15 +329,33 @@ function handleTransactionExpenseFormSubmit(event) {
     }
     
     if (isEditMode) {
-        // 기존 기록 수정
-        transactionRecords[editIndex] = {
+        // 기존 데이터 삭제 후 새 데이터 생성
+        // 새 잔액 계산
+        const latestBalance = transactionRecords.length > 0 ? transactionRecords[transactionRecords.length - 1].balance : 0;
+        const newBalance = latestBalance - expense;
+        
+        // 새 거래 기록 생성
+        const newTransactionRecord = {
             date,
             description,
             category,
             income: 0,
             expense,
-            balance: 0 // 임시 값, 재계산에서 업데이트
+            balance: newBalance
         };
+        
+        console.log('수정 전 기록:', transactionRecords);
+        console.log('삭제할 인덱스:', editIndex);
+        
+        // 기존 데이터 삭제
+        transactionRecords.splice(editIndex, 1);
+        
+        console.log('삭제 후 기록:', transactionRecords);
+        
+        // 새 데이터를 날짜 순서에 맞게 추가
+        insertRecordByDate(transactionRecords, newTransactionRecord);
+        
+        console.log('새 데이터 추가 후 기록:', transactionRecords);
         
         // 잔액 재계산
         recalculateBalances(transactionRecords);
@@ -343,6 +364,8 @@ function handleTransactionExpenseFormSubmit(event) {
         form.removeAttribute('data-edit-mode');
         form.removeAttribute('data-edit-index');
         form.removeAttribute('data-edit-type');
+        
+        console.log('수정 완료 (삭제 후 생성):', transactionRecords);
     } else {
         // 새 잔액 계산
         const latestBalance = transactionRecords.length > 0 ? transactionRecords[transactionRecords.length - 1].balance : 0;
@@ -358,7 +381,8 @@ function handleTransactionExpenseFormSubmit(event) {
             balance: newBalance
         };
         
-        transactionRecords.push(newTransactionRecord);
+        // 날짜 순서에 맞게 추가
+        insertRecordByDate(transactionRecords, newTransactionRecord);
     }
     
     // 데이터 저장
@@ -400,15 +424,26 @@ function handleTransactionIncomeFormSubmit(event) {
     }
     
     if (isEditMode) {
-        // 기존 기록 수정
-        transactionRecords[editIndex] = {
+        // 기존 데이터 삭제 후 새 데이터 생성
+        // 새 잔액 계산
+        const latestBalance = transactionRecords.length > 0 ? transactionRecords[transactionRecords.length - 1].balance : 0;
+        const newBalance = latestBalance + income;
+        
+        // 새 거래 기록 생성
+        const newTransactionRecord = {
             date,
             description,
             category,
             income,
             expense: 0,
-            balance: 0 // 임시 값, 재계산에서 업데이트
+            balance: newBalance
         };
+        
+        // 기존 데이터 삭제
+        transactionRecords.splice(editIndex, 1);
+        
+        // 새 데이터를 날짜 순서에 맞게 추가
+        insertRecordByDate(transactionRecords, newTransactionRecord);
         
         // 잔액 재계산
         recalculateBalances(transactionRecords);
@@ -417,6 +452,8 @@ function handleTransactionIncomeFormSubmit(event) {
         form.removeAttribute('data-edit-mode');
         form.removeAttribute('data-edit-index');
         form.removeAttribute('data-edit-type');
+        
+        console.log('수입 수정 완료 (삭제 후 생성):', transactionRecords);
     } else {
         // 새 잔액 계산
         const latestBalance = transactionRecords.length > 0 ? transactionRecords[transactionRecords.length - 1].balance : 0;
@@ -432,7 +469,8 @@ function handleTransactionIncomeFormSubmit(event) {
             balance: newBalance
         };
         
-        transactionRecords.push(newTransactionRecord);
+        // 날짜 순서에 맞게 추가
+        insertRecordByDate(transactionRecords, newTransactionRecord);
     }
     
     // 데이터 저장
@@ -496,6 +534,13 @@ function showSavingsForm() {
     tabMenu.classList.remove('hidden');
 }
 
+function showWithdrawSavingsForm() {
+    hideAllPages();
+    document.getElementById('withdraw-savings-form').classList.remove('hidden');
+    document.getElementById('withdraw-savings-date').valueAsDate = new Date();
+    tabMenu.classList.remove('hidden');
+}
+
 function showBudgetPage() {
     hideAllPages();
     updateBudgetTable();
@@ -547,14 +592,25 @@ function handleSavingsFormSubmit(event) {
     }
     
     if (isEditMode) {
-        // 기존 기록 수정
-        savingsRecords[editIndex] = {
+        // 기존 데이터 삭제 후 새 데이터 생성
+        // 새 총합 계산
+        const latestTotal = savingsRecords.length > 0 ? savingsRecords[savingsRecords.length - 1].total : 0;
+        const newTotal = latestTotal + amount;
+        
+        // 새 저축 기록 생성
+        const newSavingsRecord = {
             date,
             description,
             category,
             amount,
-            total: 0 // 임시 값, 재계산에서 업데이트
+            total: newTotal
         };
+        
+        // 기존 데이터 삭제
+        savingsRecords.splice(editIndex, 1);
+        
+        // 새 데이터를 날짜 순서에 맞게 추가
+        insertRecordByDate(savingsRecords, newSavingsRecord);
         
         // 총합 재계산
         recalculateSavingsTotals();
@@ -563,6 +619,8 @@ function handleSavingsFormSubmit(event) {
         form.removeAttribute('data-edit-mode');
         form.removeAttribute('data-edit-index');
         form.removeAttribute('data-edit-type');
+        
+        console.log('저축 수정 완료 (삭제 후 생성):', savingsRecords);
     } else {
         // 새 총합 계산
         const latestTotal = savingsRecords.length > 0 ? savingsRecords[savingsRecords.length - 1].total : 0;
@@ -577,7 +635,8 @@ function handleSavingsFormSubmit(event) {
             total: newTotal
         };
         
-        savingsRecords.push(newSavingsRecord);
+        // 날짜 순서에 맞게 추가
+        insertRecordByDate(savingsRecords, newSavingsRecord);
     }
     
     // 데이터 저장
@@ -630,32 +689,44 @@ function updateSavingsTable() {
         
         // 저축한 돈
         const amountCell = row.insertCell(3);
-        amountCell.textContent = formatCurrency(record.amount);
+        amountCell.textContent = record.amount > 0 ? formatCurrency(record.amount) : '-';
+        
+        // 꽤내쓴 돈
+        const withdrawCell = row.insertCell(4);
+        withdrawCell.textContent = record.amount < 0 ? formatCurrency(Math.abs(record.amount)) : '-';
         
         // 총합
-        const totalCell = row.insertCell(4);
+        const totalCell = row.insertCell(5);
         totalCell.textContent = formatCurrency(record.total);
         
         // 관리 버튼
-        const actionsCell = row.insertCell(5);
+        const actionsCell = row.insertCell(6);
         actionsCell.classList.add('actions-cell');
         
-        // 편집 버튼
-        const editButton = document.createElement('button');
-        editButton.textContent = '✏️';
-        editButton.classList.add('edit-button');
-        editButton.setAttribute('data-type', 'savings');
-        editButton.setAttribute('data-index', index);
-        editButton.addEventListener('click', () => handleEditRecord('savings', index));
-        actionsCell.appendChild(editButton);
+        // 원본 배열에서의 인덱스 찾기
+        const originalIndex = savingsRecords.findIndex(item => 
+            item.date === record.date && 
+            item.description === record.description && 
+            item.amount === record.amount && 
+            item.total === record.total
+        );
+        
+        // 편집 버튼 - 사용자 요청에 따라 화면에 표시하지 않음
+        // const editButton = document.createElement('button');
+        // editButton.textContent = '✏️';
+        // editButton.classList.add('edit-button');
+        // editButton.setAttribute('data-type', 'savings');
+        // editButton.setAttribute('data-index', originalIndex);
+        // editButton.addEventListener('click', () => handleEditRecord('savings', originalIndex));
+        // actionsCell.appendChild(editButton);
         
         // 삭제 버튼
         const deleteButton = document.createElement('button');
         deleteButton.textContent = '🗑️';
         deleteButton.classList.add('delete-button');
         deleteButton.setAttribute('data-type', 'savings');
-        deleteButton.setAttribute('data-index', index);
-        deleteButton.addEventListener('click', () => handleDeleteRecord('savings', index));
+        deleteButton.setAttribute('data-index', originalIndex);
+        deleteButton.addEventListener('click', () => handleDeleteRecord('savings', originalIndex));
         actionsCell.appendChild(deleteButton);
     });
 }
@@ -734,6 +805,7 @@ function hideAllPages() {
     document.getElementById('transaction-expense-form').classList.add('hidden');
     document.getElementById('transaction-income-form').classList.add('hidden');
     document.getElementById('savings-form').classList.add('hidden');
+    document.getElementById('withdraw-savings-form').classList.add('hidden');
 }
 
 function setActiveTab(tabId) {
@@ -847,22 +919,31 @@ function updateBudgetTable() {
         // 관리 버튼 추가
         const actionsCell = row.querySelector('.actions-cell');
         
-        // 편집 버튼
-        const editButton = document.createElement('button');
-        editButton.textContent = '✏️';
-        editButton.classList.add('edit-button');
-        editButton.setAttribute('data-type', 'budget');
-        editButton.setAttribute('data-index', index);
-        editButton.addEventListener('click', () => handleEditRecord('budget', index));
-        actionsCell.appendChild(editButton);
+        // 원본 배열에서의 인덱스 찾기
+        const originalIndex = budgetRecords.findIndex(item => 
+            item.date === record.date && 
+            item.description === record.description && 
+            item.income === record.income && 
+            item.expense === record.expense && 
+            item.balance === record.balance
+        );
+        
+        // 편집 버튼 - 사용자 요청에 따라 화면에 표시하지 않음
+        // const editButton = document.createElement('button');
+        // editButton.textContent = '✏️';
+        // editButton.classList.add('edit-button');
+        // editButton.setAttribute('data-type', 'budget');
+        // editButton.setAttribute('data-index', originalIndex);
+        // editButton.addEventListener('click', () => handleEditRecord('budget', originalIndex));
+        // actionsCell.appendChild(editButton);
         
         // 삭제 버튼
         const deleteButton = document.createElement('button');
         deleteButton.textContent = '🗑️';
         deleteButton.classList.add('delete-button');
         deleteButton.setAttribute('data-type', 'budget');
-        deleteButton.setAttribute('data-index', index);
-        deleteButton.addEventListener('click', () => handleDeleteRecord('budget', index));
+        deleteButton.setAttribute('data-index', originalIndex);
+        deleteButton.addEventListener('click', () => handleDeleteRecord('budget', originalIndex));
         actionsCell.appendChild(deleteButton);
     });
 }
@@ -924,22 +1005,30 @@ function updateTransactionTable() {
         // 관리 버튼 추가
         const actionsCell = row.querySelector('.actions-cell');
         
-        // 편집 버튼
-        const editButton = document.createElement('button');
-        editButton.textContent = '✏️';
-        editButton.classList.add('edit-button');
-        editButton.setAttribute('data-type', 'transaction');
-        editButton.setAttribute('data-index', index);
-        editButton.addEventListener('click', () => handleEditRecord('transaction', index));
-        actionsCell.appendChild(editButton);
+        // 원본 배열에서의 인덱스 찾기
+        const originalIndex = transactionRecords.findIndex(item => 
+            item.date === record.date && 
+            item.description === record.description && 
+            item.income === record.income && 
+            item.expense === record.expense
+        );
+        
+        // 편집 버튼 - 사용자 요청에 따라 화면에 표시하지 않음
+        // const editButton = document.createElement('button');
+        // editButton.textContent = '✏️';
+        // editButton.classList.add('edit-button');
+        // editButton.setAttribute('data-type', 'transaction');
+        // editButton.setAttribute('data-index', originalIndex);
+        // editButton.addEventListener('click', () => handleEditRecord('transaction', originalIndex));
+        // actionsCell.appendChild(editButton);
         
         // 삭제 버튼
         const deleteButton = document.createElement('button');
         deleteButton.textContent = '🗑️';
         deleteButton.classList.add('delete-button');
         deleteButton.setAttribute('data-type', 'transaction');
-        deleteButton.setAttribute('data-index', index);
-        deleteButton.addEventListener('click', () => handleDeleteRecord('transaction', index));
+        deleteButton.setAttribute('data-index', originalIndex);
+        deleteButton.addEventListener('click', () => handleDeleteRecord('transaction', originalIndex));
         actionsCell.appendChild(deleteButton);
     });
 }
@@ -1386,6 +1475,12 @@ function handleEditRecord(type, index) {
             document.getElementById('transaction-expense-form').setAttribute('data-edit-mode', 'true');
             document.getElementById('transaction-expense-form').setAttribute('data-edit-index', index);
             document.getElementById('transaction-expense-form').setAttribute('data-edit-type', type);
+            
+            // 폼 제목 변경
+            const expenseFormTitle = document.querySelector('#transaction-expense-form h1');
+            if (expenseFormTitle) {
+                expenseFormTitle.textContent = '거래 지출 수정하기';
+            }
         } else {
             formToShow = showTransactionIncomeForm;
             // 폼 필드 채우기
@@ -1398,6 +1493,12 @@ function handleEditRecord(type, index) {
             document.getElementById('transaction-income-form').setAttribute('data-edit-mode', 'true');
             document.getElementById('transaction-income-form').setAttribute('data-edit-index', index);
             document.getElementById('transaction-income-form').setAttribute('data-edit-type', type);
+            
+            // 폼 제목 변경
+            const incomeFormTitle = document.querySelector('#transaction-income-form h1');
+            if (incomeFormTitle) {
+                incomeFormTitle.textContent = '거래 수입 수정하기';
+            }
         }
     } else if (type === 'savings') {
         record = savingsRecords[index];
@@ -1412,6 +1513,12 @@ function handleEditRecord(type, index) {
         document.getElementById('savings-form-element').setAttribute('data-edit-mode', 'true');
         document.getElementById('savings-form-element').setAttribute('data-edit-index', index);
         document.getElementById('savings-form-element').setAttribute('data-edit-type', type);
+        
+        // 폼 제목 변경
+        const savingsFormTitle = document.querySelector('#savings-form h1');
+        if (savingsFormTitle) {
+            savingsFormTitle.textContent = '저축 수정하기';
+        }
     }
     
     // 해당 폼 표시
@@ -1494,6 +1601,20 @@ function recalculateSavingsTotals() {
     });
 }
 
+// 날짜 순서에 맞게 데이터 삽입 함수
+function insertRecordByDate(records, newRecord) {
+    let insertIndex = 0;
+    for (let i = 0; i < records.length; i++) {
+        if (new Date(records[i].date) > new Date(newRecord.date)) {
+            insertIndex = i;
+            break;
+        }
+        insertIndex = i + 1;
+    }
+    records.splice(insertIndex, 0, newRecord);
+    return records;
+}
+
 // 데이터 저장 함수
 function saveData() {
     localStorage.setItem('budgetRecords', JSON.stringify(budgetRecords));
@@ -1508,6 +1629,62 @@ function saveData() {
 // 초기화 확인 대화상자 표시
 function showResetConfirmDialog() {
     document.getElementById('reset-confirm-dialog').classList.remove('hidden');
+}
+
+// 저축 꽴내쓰기 폼 제출 처리
+function handleWithdrawSavingsFormSubmit(event) {
+    event.preventDefault();
+    
+    // 폼 데이터 가져오기
+    const form = event.target;
+    const date = document.getElementById('withdraw-savings-date').value;
+    const description = document.getElementById('withdraw-savings-description').value;
+    const category = document.getElementById('withdraw-savings-category').value;
+    const amount = Number(document.getElementById('withdraw-savings-amount').value);
+    
+    // 유효성 검사
+    if (!date || !description || amount <= 0) {
+        alert('모든 필드를 올바르게 입력해주세요.');
+        return;
+    }
+    
+    // 저축 기록이 없는 경우 처리
+    if (savingsRecords.length === 0) {
+        alert('저축 기록이 없습니다. 먼저 저축을 추가해주세요.');
+        return;
+    }
+    
+    // 최신 저축 총합 가져오기
+    const latestTotal = savingsRecords[savingsRecords.length - 1].total;
+    
+    // 꽴내쓴 금액이 총 저축액보다 클 경우 처리
+    if (amount > latestTotal) {
+        alert(`총 저축액(${formatCurrency(latestTotal)})보다 많은 금액을 꽴내쓸 수 없습니다.`);
+        return;
+    }
+    
+    // 새 저축 기록 생성 (음수 값으로 저장)
+    const newSavingsRecord = {
+        date,
+        description,
+        category,
+        amount: -amount, // 음수 값으로 저장
+        total: latestTotal - amount
+    };
+    
+    // 저축 기록 추가
+    savingsRecords.push(newSavingsRecord);
+    
+    // 데이터 저장
+    saveData();
+    
+    // 폼 초기화
+    form.reset();
+    document.getElementById('withdraw-savings-date').valueAsDate = new Date();
+    document.getElementById('withdraw-savings-amount').value = 0;
+    
+    // 저축 페이지로 이동
+    showSavingsPage();
 }
 
 // 초기화 확인 대화상자 숨기기

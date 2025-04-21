@@ -25,8 +25,15 @@
         <!-- 홈 화면 -->
         <div id="home-page" class="page hidden">
             <div class="header-container">
-                <h1>용돈기입장</h1>
-                <button id="reset-button" class="reset-button">초기화</button>
+                <div class="header-left">
+                    <!-- 왼쪽 공간 -->
+                </div>
+                <div class="logo-title">
+                    <img src="images/hoju_logo.png" alt="용돈기입장 로고" class="hoju-logo">
+                </div>
+                <div class="header-right">
+                    <button id="reset-button" class="reset-button">초기화</button>
+                </div>
             </div>
             <div class="balance-display">
                 <h2>현재 잔액</h2>
@@ -335,7 +342,7 @@
 
         <!-- 저축 폼 -->
         <div id="savings-form" class="page hidden">
-            <h1>새 저축 추가하기</h1>
+            <h1>저축 채워넣기</h1>
             <form id="savings-form-element">
                 <div class="form-group">
                     <label for="savings-date">날짜</label>
@@ -371,7 +378,10 @@
         <div id="savings-page" class="page hidden">
             <h1>저축 관리</h1>
             
-            <button id="add-savings-button" class="primary-button">+ 저축 추가하기</button>
+            <div class="button-group">
+                <button id="withdraw-savings-button" class="primary-button">- 저축 꺼내쓰기</button>
+                <button id="add-savings-button" class="primary-button">+ 저축 채워넣기</button>
+            </div>
             
             <div class="filters">
                 <div class="filter-group">
@@ -409,6 +419,7 @@
                             <th>내용</th>
                             <th>카테고리</th>
                             <th>저축한 돈</th>
+                            <th>꺼내쓴 돈</th>
                             <th>총합</th>
                             <th>관리</th>
                         </tr>
@@ -420,6 +431,37 @@
             </div>
         </div>
 
+        <!-- 저축 내쓰기 폼 -->
+        <div id="withdraw-savings-form" class="page hidden">
+            <h1>저축 꺼내쓰기</h1>
+            <form id="withdraw-savings-form-element">
+                <div class="form-group">
+                    <label for="withdraw-savings-date">날짜</label>
+                    <input type="date" id="withdraw-savings-date" class="datepicker" required>
+                </div>
+                <div class="form-group">
+                    <label for="withdraw-savings-description">내용</label>
+                    <input type="text" id="withdraw-savings-description" placeholder="사용 목적을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label for="withdraw-savings-category">카테고리</label>
+                    <select id="withdraw-savings-category" required>
+                        <option value="정기저축">정기저축</option>
+                        <option value="추가저축">추가저축</option>
+                        <option value="기타저축">기타저축</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="withdraw-savings-amount">꺼내쓴 돈</label>
+                    <input type="number" id="withdraw-savings-amount" min="0" value="0" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="primary-button">저장</button>
+                    <button type="button" id="withdraw-savings-cancel-button" class="secondary-button">취소</button>
+                </div>
+            </form>
+        </div>
+        
         <!-- 탭 메뉴 -->
         <nav id="tab-menu" class="hidden">
             <button id="home-tab" class="tab-button active">🏠 홈</button>
